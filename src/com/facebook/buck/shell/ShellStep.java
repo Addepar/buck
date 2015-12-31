@@ -113,16 +113,16 @@ public abstract class ShellStep implements Step {
     endTime = System.currentTimeMillis();
     double endLoad = OS_JMX.getSystemLoadAverage();
 
-    LOG.debug(
-        "%s: exit code: %d. os load (before, after): (%f, %f). CPU count: %d." +
-        "\nstdout:\n%s\nstderr:\n%s\n",
-        shellCommandArgs,
-        exitCode,
-        initialLoad,
-        endLoad,
-        OS_JMX.getAvailableProcessors(),
-        stdout.or(""),
-        stderr.or(""));
+    // LOG.debug(
+    //     "%s: exit code: %d. os load (before, after): (%f, %f). CPU count: %d." +
+    //     "\nstdout:\n%s\nstderr:\n%s\n",
+    //     shellCommandArgs,
+    //     exitCode,
+    //     initialLoad,
+    //     endLoad,
+    //     OS_JMX.getAvailableProcessors(),
+    //     stdout.or(""),
+    //     stderr.or(""));
 
     return exitCode;
   }
