@@ -194,7 +194,9 @@ public class TestRunning {
           executionContext,
           testRuleKeyFileHelper,
           options.isResultsCacheEnabled(),
-          !options.getTestSelectorList().isEmpty());
+          !options.getTestSelectorList().isEmpty(),
+          options.isDryRun(),
+          options.isRerunCachedFailures());
 
       final Map<String, UUID> testUUIDMap = new HashMap<>();
       TestRule.TestReportingCallback testReportingCallback = new TestRule.TestReportingCallback() {
@@ -570,7 +572,9 @@ public class TestRunning {
       ExecutionContext executionContext,
       TestRuleKeyFileHelper testRuleKeyFileHelper,
       boolean isResultsCacheEnabled,
-      boolean isRunningWithTestSelectors)
+      boolean isRunningWithTestSelectors,
+      boolean isDryRun,
+      boolean isRerunCachedFailures)
       throws IOException, ExecutionException, InterruptedException {
     boolean isTestRunRequired;
     BuildResult result;
@@ -589,10 +593,22 @@ public class TestRunning {
             isResultsCacheEnabled &&
             test.hasTestResultFiles(executionContext) &&
             testRuleKeyFileHelper.isRuleKeyInDir(test)) {
-      // If this build rule's artifacts (which includes the rule's output and its test result
-      // files) are up to date, then no commands are necessary to run the tests. The test result
-      // files will be read from the XML files in interpretTestResults().
-      isTestRunRequired = false;
+      try {
+        if (isRerunCachedFailures && !test.interpretTestResults(
+            executionContext,
+            isRunningWithTestSelectors,
+            isDryRun).call().isSuccess()) {
+          isTestRunRequired = true;
+        } else {
+          // If this build rule's artifacts (which includes the rule's output and its test result
+          // files) are up to date, then no commands are necessary to run the tests. The test result
+          // files will be read from the XML files in interpretTestResults().
+          isTestRunRequired = false;
+        }
+      }
+      catch (Exception e) {
+        isTestRunRequired = false;
+      }
     } else {
       isTestRunRequired = true;
     }
