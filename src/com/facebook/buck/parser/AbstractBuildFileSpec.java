@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
@@ -87,6 +88,11 @@ abstract class AbstractBuildFileSpec {
             if (filesystem.isIgnored(dir)) {
               return FileVisitResult.SKIP_SUBTREE;
             }
+            // skip buck-out when walking for finding build files
+            else if (BuckConstant.BUCK_OUTPUT_DIRECTORY.equals(dir.getFileName().toString())) {
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+
             return FileVisitResult.CONTINUE;
           }
 
