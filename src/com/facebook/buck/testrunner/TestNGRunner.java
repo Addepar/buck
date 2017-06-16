@@ -77,7 +77,8 @@ public final class TestNGRunner extends BaseRunner {
         testng.addListener(new EmailableReporter());
         // ... except this replaces JUnitReportReporter ...
         testng.addListener(new JUnitReportReporterImproved());
-        // ... and we can't access TestNG verbosity, so we remove VerboseReporter
+        // ... and we don't want to spam the buck logs, so we remove VerboseReporter
+        // Capture any uncaught errors from TestNG
         try {
           testng.run();
         } catch (Exception e) {
@@ -230,7 +231,6 @@ public final class TestNGRunner extends BaseRunner {
     private final List<TestResult> results;
     private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
     private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
-    private Throwable throwable;
 
     //buffers for holding std out/err when configuring:
     private String stdOut;
@@ -312,6 +312,7 @@ public final class TestNGRunner extends BaseRunner {
       // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
       // form of System.out.println) the developer is using to debug the test.
       originalOut = System.out;
+      originalErr = System.err;
       rawStdOutBytes = new ByteArrayOutputStream();
       rawStdErrBytes = new ByteArrayOutputStream();
       stdOutStream = streamToPrintStream(rawStdOutBytes, System.out);
