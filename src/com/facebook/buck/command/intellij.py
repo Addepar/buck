@@ -7,20 +7,6 @@ import sys
 from collections import defaultdict
 
 
-MISC_XML = """<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component
-    name="ProjectRootManager"
-    version="2"
-    languageLevel="%(java_language_level)s"
-    assert-keyword="true"
-    jdk-15="true"
-    project-jdk-name="%(project_jdk_name)s"
-    project-jdk-type="%(project_jdk_type)s">
-    %(project_output_url)s
-  </component>
-</project>"""
-
 MODULE_XML_START = """<?xml version="1.0" encoding="UTF-8"?>
 <module type="%(type)s" version="4">"""
 
@@ -469,20 +455,6 @@ def write_all_modules(modules):
     write_file_if_changed('.idea/modules.xml', xml)
 
 
-def write_misc_file(java_settings):
-    """Writes a misc.xml file to define some settings specific to the project."""
-    output_url = '<output url="file://$PROJECT_DIR$/' + \
-        java_settings.get('outputUrl', 'build-ij/classes') + '" />'
-    xml = MISC_XML % {
-        'java_language_level': java_settings.get('languageLevel', 'JDK_1_6'),
-        'project_jdk_name': java_settings.get('jdkName', 'Android API 21 Platform'),
-        'project_jdk_type': java_settings.get('jdkType', 'Android SDK'),
-        'project_output_url': output_url
-    }
-
-    write_file_if_changed('.idea/misc.xml', xml)
-
-
 def write_aars(aars):
     """Writes an XML file to define each prebuilt aar."""
     mkdir_p('.idea/libraries')
@@ -616,9 +588,6 @@ if __name__ == '__main__':
     write_modules(modules, generate_minimum_project, android_auto_generation_disabled)
     write_all_modules(modules)
     write_run_configs()
-
-    java_settings = parsed_json['java']
-    write_misc_file(java_settings)
 
     # Write the list of modified files to stdout
     for path in MODIFIED_FILES:
