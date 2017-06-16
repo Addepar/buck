@@ -66,7 +66,6 @@ public final class TestNGRunner extends BaseRunner {
         results = new ArrayList<>();
         TestNG testng = new TestNG();
         testng.setUseDefaultListeners(false);
-//        testng.addListener(suiteFailureListener);
         testng.setAnnotationTransformer(new TestFilter());
         testng.setTestClasses(new Class<?>[]{testClass});
         testng.addListener(new TestListener(results));
