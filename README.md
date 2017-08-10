@@ -16,6 +16,15 @@ To build Buck, run the following:
     ant
     ./bin/buck --help
 
+Updating the Buck executable in AMP
+-----------------------------------
+
+To update `buck.pex` from AMP, run the following in this repo:
+
+    ant
+    ./bin/buck build buck
+    cp buck-out/gen/programs/buck.pex <location-of-AMP-directory>
+
 License
 -------
 Apache License 2.0
