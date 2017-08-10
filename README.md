@@ -41,6 +41,15 @@ Buck tries to move fast with respect to its internals. However, for user facing 
 - For larger features, a change eventually is put in place that sets the default to the new behavior. e.g. when Skylark becomes the default build file parser.
 - When the removal date is reached, a change is submitted to remove the feature. At this point, the configuration value will still parse, but will not be used by Buck internally.
 
+Updating the Buck executable in AMP
+-----------------------------------
+
+To update `buck.pex` from AMP, run the following in this repo:
+
+    ant
+    ./bin/buck build buck
+    cp buck-out/gen/programs/buck.pex <location-of-AMP-directory>
+
 License
 -------
 Apache License 2.0
