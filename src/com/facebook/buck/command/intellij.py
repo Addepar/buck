@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 
+from os.path import exists
 from collections import defaultdict
 
 
@@ -471,6 +472,9 @@ def write_all_modules(modules):
 
 def write_misc_file(java_settings):
     """Writes a misc.xml file to define some settings specific to the project."""
+    misc_path = '.idea/misc.xml'
+    if not exists(misc_path):
+        return
     output_url = '<output url="file://$PROJECT_DIR$/' + \
         java_settings.get('outputUrl', 'build-ij/classes') + '" />'
     xml = MISC_XML % {
@@ -480,7 +484,7 @@ def write_misc_file(java_settings):
         'project_output_url': output_url
     }
 
-    write_file_if_changed('.idea/misc.xml', xml)
+    write_file_if_changed(misc_path, xml)
 
 
 def write_aars(aars):
@@ -589,7 +593,7 @@ def clean_old_files():
                         file_name not in PROJECT_FILES):
                     os.remove(file_name)
             return
-        except Exception as e:
+        except Exception:
             pass
 
 
