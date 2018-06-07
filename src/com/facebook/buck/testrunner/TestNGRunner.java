@@ -64,7 +64,7 @@ public final class TestNGRunner extends BaseRunner {
       if (!mightBeATestClass(testClass)) {
         results = Collections.emptyList();
       } else {
-        results = new ArrayList<>();
+        results = Collections.synchronizedList(new ArrayList<>());
         TestNG testng = new TestNG();
         testng.setUseDefaultListeners(false);
         testng.addListener(new FilteringAnnotationTransformer(results));
