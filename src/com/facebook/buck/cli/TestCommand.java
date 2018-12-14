@@ -669,7 +669,7 @@ public class TestCommand extends BuildCommand {
           }
 
           if (isBuildOnly) {
-            return 0;
+            return ExitCode.SUCCESS;
           }
 
           // If the user requests that we build tests that we filter out, then we perform
