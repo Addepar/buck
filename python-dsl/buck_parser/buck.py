@@ -1111,7 +1111,8 @@ class BuildFileProcessor(object):
         self._import_whitelist_manager = ImportWhitelistManager(
             import_whitelist=self._create_import_whitelist(project_import_whitelist),
             safe_modules_config=self.SAFE_MODULES_CONFIG,
-            path_predicate=lambda path: is_in_dir(path, self._project_root),
+            path_predicate=lambda path: is_in_dir(path, self._project_root) \
+                and not self._is_path_in_virtualenv(path)
         )
         # Set of helpers callable from the child environment.
         self._default_globals_for_extension = self._create_default_globals(False, False)
@@ -1714,6 +1715,14 @@ class BuildFileProcessor(object):
 
         return set(global_whitelist + project_import_whitelist)
 
+    @staticmethod
+    def _is_path_in_virtualenv(path):
+        """
+        If Python is executing in a virtualenv, check whether the path is part of the virtualenv.
+        """
+        if hasattr(sys, 'real_prefix'): # in a virtualenv
+            return is_in_dir(path, sys.prefix)
+
     def _file_access_wrapper(self, real):
         """
         Return wrapper around function so that accessing a file produces warning if it is
@@ -1727,7 +1736,8 @@ class BuildFileProcessor(object):
             with self._wrap_file_access(wrap=False):
                 if self._called_from_project_file():
                     path = os.path.abspath(filename)
-                    if path not in self._current_build_env.includes:
+                    if path not in self._current_build_env.includes \
+                        and not self._is_path_in_virtualenv(path):
                         dep_path = "//" + os.path.relpath(path, self._project_root)
                         warning_message = (
                             "Access to a non-tracked file detected! {0} is not a ".format(
