@@ -1514,10 +1514,11 @@ class BuildFileProcessor(object):
         # type: () -> bool
         """
         Returns true if the function was called from a project file.
+        Treat virtualenv files as not "inside the project".
         """
         frame = get_caller_frame(skip=[__name__])
         filename = inspect.getframeinfo(frame).filename
-        return is_in_dir(filename, self._project_root)
+        return is_in_dir(filename, self._project_root) and not self._is_path_in_virtualenv(filename)
 
     def _include_defs(self, is_implicit_include, name, namespace=None):
         # type: (bool, str, Optional[str]) -> None
