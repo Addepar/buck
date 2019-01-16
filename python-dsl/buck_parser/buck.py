@@ -1566,7 +1566,6 @@ class BuildFileProcessor(object):
             future_features = absolute_import.compiler_flag
             code = compile(contents, path, "exec", future_features, 1)
 
-
             # Execute code with build file sandboxing
             with self._build_file_sandboxing():
                 exec(code, module.__dict__)
