@@ -183,6 +183,11 @@ def _emit_java_version_warnings_if_any(java_version_status_queue):
 def main(argv, reporter):
     java_version_status_queue = Queue(maxsize=1)
 
+    # ignore the java11-test-mode flag
+    java11_test_mode_arg = "--java11-test-mode"
+    if java11_test_mode_arg in argv:
+        argv.remove(java11_test_mode_arg)
+        
     java11_test_mode = True
     required_java_version = "11"
 
