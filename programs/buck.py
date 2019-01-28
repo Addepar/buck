@@ -182,13 +182,9 @@ def _emit_java_version_warnings_if_any(java_version_status_queue):
 
 def main(argv, reporter):
     java_version_status_queue = Queue(maxsize=1)
-    required_java_version = "8"
 
-    java11_test_mode_arg = "--java11-test-mode"
-    java11_test_mode = java11_test_mode_arg in argv
-    if java11_test_mode:
-        argv.remove(java11_test_mode_arg)
-        required_java_version = "11"
+    java11_test_mode = True
+    required_java_version = "11"
 
     _try_to_verify_java_version_off_thread(
         java_version_status_queue, required_java_version
