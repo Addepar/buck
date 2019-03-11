@@ -9,9 +9,8 @@
     ; Indicates that any folder named src or test
     ; are folders that contain Java code.
     src_roots = src, test
-    source_level = 8
-    target_level = 8
-    bootclasspath-8 = third-party/java/jdk/jdk8-rt-stub.jar
+    source_level = 11
+    target_level = 11
     jar_spool_mode = direct_to_jar
     abi_generation_mode = source_only
     # There is some nondeterminism with the Immutables processor that causes verification to
