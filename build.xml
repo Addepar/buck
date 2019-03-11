@@ -1076,7 +1076,7 @@
       <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/gen_buck_info.py"/>
       <arg value="--java-version"/>
-      <arg value="${java.version}"/>
+      <arg value="11"/>
       <arg value="--release-version"/>
       <arg value="${release.version}"/>
       <arg value="--release-timestamp"/>
