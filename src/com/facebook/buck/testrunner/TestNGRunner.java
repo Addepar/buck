@@ -38,13 +38,13 @@ import org.testng.IClass;
 import org.testng.IConfigurationListener;
 import org.testng.IReporter;
 import org.testng.ITestContext;
+import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.ITestAnnotation;
 import org.testng.annotations.Test;
-import org.testng.internal.IResultListener2;
 import org.testng.reporters.EmailableReporter;
 import org.testng.reporters.FailedReporter;
 import org.testng.reporters.JUnitReportReporter;
@@ -211,56 +211,30 @@ public final class TestNGRunner extends BaseRunner {
     }
   }
 
-  private static class TestListener implements IResultListener2, IConfigurationListener {
+  private static class TestListener implements ITestListener, IConfigurationListener {
     private final List<TestResult> results;
+    private boolean mustRestoreStdoutAndStderr;
     private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
     private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
     private Map<IClass, Throwable> failedConfigurationTestClasses = new HashMap<>();
-
-    //buffers for holding std out/err when configuring:
-    private String stdOut;
-    private String stdErr;
 
     public TestListener(List<TestResult> results) {
       this.results = results;
     }
 
     @Override
-    public void beforeConfiguration(ITestResult result) {
-      startCapture();
-    }
-
-    @Override
-    public void onConfigurationFailure(ITestResult result) {
-      failedConfigurationTestClasses.put(result.getTestClass(), result.getThrowable());
-      recordResult(result, ResultType.FAILURE);
-    }
-
-    @Override
-    public void onConfigurationSkip(ITestResult result) {
-      recordResult(result, ResultType.FAILURE);
-    }
-
-    @Override
-    public void onConfigurationSuccess(ITestResult result) {
-      recordResult(result, ResultType.SUCCESS);
-    }
-
-    @Override
-    public void onTestStart(ITestResult result) {
-      startCapture();
-    }
+    public void onTestStart(ITestResult result) {}
 
     @Override
     public void onTestSuccess(ITestResult result) {
-      recordResult(result, ResultType.SUCCESS);
+      recordResult(result, ResultType.SUCCESS, result.getThrowable());
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
       @Nullable Throwable throwable = failedConfigurationTestClasses.get(result.getTestClass());
       if (throwable == null) {
-        recordResult(result, ResultType.ASSUMPTION_VIOLATION);
+        recordResult(result, ResultType.ASSUMPTION_VIOLATION, result.getThrowable());
       } else {
         recordResult(result, ResultType.FAILURE, throwable);
       }
@@ -268,42 +242,16 @@ public final class TestNGRunner extends BaseRunner {
 
     @Override
     public void onTestFailure(ITestResult result) {
-      recordResult(result, ResultType.FAILURE);
+      recordResult(result, ResultType.FAILURE, result.getThrowable());
     }
 
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-      recordResult(result, ResultType.FAILURE);
+      recordResult(result, ResultType.FAILURE, result.getThrowable());
     }
 
     @Override
-    public void onStart(ITestContext context) {}
-
-    @Override
-    public void onFinish(ITestContext context) {}
-
-    private void recordResult(ITestResult result, ResultType type) {
-      recordResult(result, type, result.getThrowable());
-    }
-
-    private void recordResult(ITestResult result, ResultType type, Throwable failure) {
-      stopCapture();
-
-      String className = result.getTestClass().getName();
-      String methodName = getTestMethodNameWithParameters(result);
-
-      long runTimeMillis = result.getEndMillis() - result.getStartMillis();
-
-      results.add(new TestResult(className,
-            methodName,
-            runTimeMillis,
-            type,
-            failure,
-            stdOut,
-            stdErr));
-    }
-
-    private void startCapture() {
+    public void onStart(ITestContext context) {
       // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
       // form of System.out.println) the developer is using to debug the test.
       originalOut = System.out;
@@ -314,25 +262,33 @@ public final class TestNGRunner extends BaseRunner {
       stdErrStream = streamToPrintStream(rawStdErrBytes, System.err);
       System.setOut(stdOutStream);
       System.setErr(stdErrStream);
+      mustRestoreStdoutAndStderr = true;
     }
 
-    private void stopCapture() {
-      // Restore the original stdout/stderr.
-      System.setOut(originalOut);
-      System.setErr(originalErr);
+    @Override
+    public void onFinish(ITestContext context) {
+      if (mustRestoreStdoutAndStderr) {
+        // Restore the original stdout/stderr.
+        System.setOut(originalOut);
+        System.setErr(originalErr);
 
-      // Get the stdout/stderr written during the test as strings.
-      stdOutStream.flush();
-      stdErrStream.flush();
+        // Get the stdout/stderr written during the test as strings.
+        stdOutStream.flush();
+        stdErrStream.flush();
+        mustRestoreStdoutAndStderr = false;
+      }
+    }
 
-      stdOut = streamToString(rawStdOutBytes);
-      if (stdOut == null) {
-        stdOut = "";
-      }
-      stdErr = streamToString(rawStdErrBytes);
-      if (stdErr == null) {
-        stdErr = "";
-      }
+    private void recordResult(ITestResult result, ResultType type, Throwable failure) {
+      String stdOut = streamToString(rawStdOutBytes);
+      String stdErr = streamToString(rawStdErrBytes);
+
+      String className = result.getTestClass().getName();
+      String methodName = getTestMethodNameWithParameters(result);
+
+      long runTimeMillis = result.getEndMillis() - result.getStartMillis();
+      results.add(
+          new TestResult(className, methodName, runTimeMillis, type, failure, stdOut, stdErr));
     }
 
     private String streamToString(ByteArrayOutputStream str) {
@@ -349,6 +305,19 @@ public final class TestNGRunner extends BaseRunner {
       } catch (UnsupportedEncodingException e) {
         return fallback;
       }
+    }
+
+    @Override
+    public void onConfigurationSuccess(ITestResult iTestResult) {}
+
+    @Override
+    public void onConfigurationFailure(ITestResult iTestResult) {
+      failedConfigurationTestClasses.put(iTestResult.getTestClass(), iTestResult.getThrowable());
+    }
+
+    @Override
+    public void onConfigurationSkip(ITestResult iTestResult) {
+      failedConfigurationTestClasses.put(iTestResult.getTestClass(), iTestResult.getThrowable());
     }
   }
 
