@@ -234,7 +234,7 @@ public final class TestNGRunner extends BaseRunner {
     public void onTestSkipped(ITestResult result) {
       @Nullable Throwable throwable = failedConfigurationTestClasses.get(result.getTestClass());
       if (throwable == null) {
-        recordResult(result, ResultType.ASSUMPTION_VIOLATION, result.getThrowable());
+        recordResult(result, ResultType.FAILURE, result.getThrowable());
       } else {
         recordResult(result, ResultType.FAILURE, throwable);
       }
