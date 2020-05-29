@@ -375,8 +375,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean shouldBuildSourceAbi() {
-    return getConfiguredCompilerFactory().shouldGenerateSourceAbi()
-        && !getSrcs().isEmpty()
+    return !getSrcs().isEmpty()
         && getPostprocessClassesCommands().isEmpty();
   }
 
