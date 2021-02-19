@@ -68,6 +68,7 @@ from .util import (
     is_in_dir,
     is_special,
 )
+import pprint
 
 
 # When build files are executed, the functions in this file tagged with
@@ -1996,6 +1997,7 @@ def encode_result(values, diagnostics, profile):
             {k: v for k, v in iteritems(value) if v is not None} for value in values
         ]
     }
+    pprint.PrettyPrinter(indent=4).pprint(result)
     json_encoder = BuckJSONEncoder()
     if diagnostics:
         encoded_diagnostics = []
