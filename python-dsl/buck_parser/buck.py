@@ -1508,6 +1508,9 @@ class BuildFileProcessor(object):
         build_env = self._current_build_env
 
         # Lookup the value and record it in this build file's context.
+        # The name may need to be decoded from bytes.
+        if isinstance(name, bytes):
+            name = name.decode()
         build_env.used_env_vars[name] = value
 
     def _called_from_project_file(self):
@@ -1997,7 +2000,6 @@ def encode_result(values, diagnostics, profile):
             {k: v for k, v in iteritems(value) if v is not None} for value in values
         ]
     }
-    pprint.PrettyPrinter(indent=4).pprint(result)
     json_encoder = BuckJSONEncoder()
     if diagnostics:
         encoded_diagnostics = []
