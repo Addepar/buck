@@ -387,8 +387,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__");
+    Path path = getProjectFilesystem().getPath("test-output", "junitreports");
+    path.toFile().mkdirs();
+    return path;
   }
 
   /** @return a test case result, named "main", signifying a failure of the entire test class. */
