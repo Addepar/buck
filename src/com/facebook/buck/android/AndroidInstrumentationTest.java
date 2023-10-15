@@ -310,6 +310,13 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   @Override
+  public boolean hasTestResultFiles() {
+    Path testResultPath = getProjectFilesystem().resolve(
+        getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
+    return testResultPath.toFile().exists();
+  }
+
+  @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "__android_instrumentation_test_%s_output__");

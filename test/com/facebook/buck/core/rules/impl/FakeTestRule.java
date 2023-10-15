@@ -104,6 +104,11 @@ public class FakeTestRule extends AbstractBuildRuleWithDeclaredAndExtraDeps impl
   }
 
   @Override
+  public boolean hasTestResultFiles() {
+    return false;
+  }
+
+  @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,

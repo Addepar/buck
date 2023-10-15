@@ -53,6 +53,22 @@ import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildResult;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.rules.TestStatusMessageEvent;
+import com.facebook.buck.rules.TestSummaryEvent;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -188,6 +204,7 @@ public class TestRunning {
     // ListenableFuture.
     List<ListenableFuture<TestResults>> results = new ArrayList<>();
 
+    TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(buildEngine);
     AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
     List<TestRun> separateTestRuns = new ArrayList<>();
     List<TestRun> parallelTestRuns = new ArrayList<>();
@@ -200,6 +217,16 @@ public class TestRunning {
                   buildContext.getSourcePathResolver(),
                   /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty()));
 
+      boolean isTestRunRequired;
+      isTestRunRequired = isTestRunRequiredForTest(
+        test,
+        buildEngine,
+        executionContext,
+        testRuleKeyFileHelper,
+        options.getTestResultCacheMode(),
+        resultsInterpreter,
+        !options.getTestSelectorList().isEmpty(),
+        !options.getEnvironmentOverrides().isEmpty());
       Map<String, UUID> testUUIDMap = new HashMap<>();
       AtomicReference<TestStatusMessageEvent.Started> currentTestStatusMessageEvent =
           new AtomicReference<>();
@@ -278,17 +305,22 @@ public class TestRunning {
           };
 
       List<Step> steps;
-      params.getBuckEventBus().post(IndividualTestEvent.started(testTargets));
-      ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-      Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
-      List<Step> testSteps =
+      if (isTestRunRequired) {
+        params.getBuckEventBus().post(IndividualTestEvent.started(testTargets));
+        ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+        Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
+        List<Step> testSteps =
           test.runTests(executionContext, options, buildContext, testReportingCallback);
-      if (!testSteps.isEmpty()) {
-        stepsBuilder.addAll(testSteps);
+        if (!testSteps.isEmpty()) {
+          stepsBuilder.addAll(testSteps);
+        }
+      } else {
+        steps = ImmutableList.of();
       }
-      steps = stepsBuilder.build();
 
-      TestRun testRun = ImmutableTestRun.of(test, steps, resultsInterpreter, testReportingCallback);
+      TestRun testRun = ImmutableTestRun.of(test, steps, getStatusTransformingCallable(
+        isTestRunRequired,
+        resultsInterpreter), testReportingCallback);
 
       // Always run the commands, even if the list of commands as empty. There may be zero
       // commands because the rule is cached, but its results must still be processed.
@@ -572,7 +604,80 @@ public class TestRunning {
     };
   }
 
-  /** Generates the set of Java library rules under test. */
+  private static Callable<TestResults> getStatusTransformingCallable(
+      boolean isTestRunRequired,
+      final Callable<TestResults> originalCallable) {
+    if (isTestRunRequired) {
+      return originalCallable;
+    }
+    return () -> {
+      TestResults originalTestResults = originalCallable.call();
+      ImmutableList<TestCaseSummary> cachedTestResults = originalTestResults.getTestCases().stream()
+          .map(TestCaseSummary.TO_CACHED_TRANSFORMATION::apply)
+          .collect(MoreCollectors.toImmutableList());
+      return TestResults.of(
+          originalTestResults.getBuildTarget(),
+          cachedTestResults,
+          originalTestResults.getContacts(),
+          originalTestResults.getLabels());
+    };
+  }
+
+  @VisibleForTesting
+  static boolean isTestRunRequiredForTest(
+      TestRule test,
+      BuildEngine cachingBuildEngine,
+      ExecutionContext executionContext,
+      TestRuleKeyFileHelper testRuleKeyFileHelper,
+      TestRunningOptions.TestResultCacheMode resultCacheMode,
+      Callable<TestResults> testResultInterpreter,
+      boolean isRunningWithTestSelectors,
+      boolean hasEnvironmentOverrides)
+      throws IOException, ExecutionException, InterruptedException {
+    boolean isTestRunRequired;
+    BuildResult result;
+    if (executionContext.isDebugEnabled()) {
+      // If debug is enabled, then we should always run the tests as the user is expecting to
+      // hook up a debugger.
+      isTestRunRequired = true;
+    } else if (isRunningWithTestSelectors) {
+      // As a feature to aid developers, we'll assume that when we are using test selectors,
+      // we should always run each test (and never look at the cache.)
+      // TODO(edward) When #3090004 and #3436849 are closed we can respect the cache again.
+      isTestRunRequired = true;
+    } else if (hasEnvironmentOverrides) {
+      // This is rather obtuse, ideally the environment overrides can be hashed and compared...
+      isTestRunRequired = true;
+    } else if (((result = cachingBuildEngine.getBuildRuleResult(
+        test.getBuildTarget())) != null) &&
+        result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
+        test.hasTestResultFiles() &&
+        testRuleKeyFileHelper.isRuleKeyInDir(test) &&
+        (resultCacheMode == TestRunningOptions.TestResultCacheMode.ENABLED ||
+            (resultCacheMode == TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED &&
+                areTestsSuccessful(testResultInterpreter)))) {
+      // If this build rule's artifacts (which includes the rule's output and its test result
+      // files) are up to date, then no commands are necessary to run the tests. The test result
+      // files will be read from the XML files in interpretTestResults().
+      isTestRunRequired = false;
+    } else {
+      isTestRunRequired = true;
+    }
+    return isTestRunRequired;
+  }
+
+  private static boolean areTestsSuccessful(Callable<TestResults> callable) {
+    try {
+      return callable.call().isSuccess();
+    } catch (Exception ex) {
+      LOG.error(ex);
+      return false;
+    }
+  }
+
+  /**
+   * Generates the set of Java library rules under test.
+   */
   static ImmutableSet<JavaLibrary> getRulesUnderTest(Iterable<TestRule> tests) {
     ImmutableSet.Builder<JavaLibrary> rulesUnderTest = ImmutableSet.builder();
 
