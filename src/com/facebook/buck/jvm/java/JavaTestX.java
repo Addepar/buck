@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -247,5 +248,10 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
       return jvmArgsOutput;
     }
     return null;
+  }
+
+  @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return false;
   }
 }

@@ -104,7 +104,7 @@ public class FakeTestRule extends AbstractBuildRuleWithDeclaredAndExtraDeps impl
   }
 
   @Override
-  public boolean hasTestResultFiles() {
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
     return false;
   }
 

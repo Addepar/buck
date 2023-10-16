@@ -18,11 +18,10 @@ package com.facebook.buck.cli;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.core.build.engine.BuildEngine;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
 
@@ -51,7 +50,7 @@ public class TestRuleKeyFileHelper {
   public Step createRuleKeyInDirStep(TestRule testRule) {
     RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
     return new WriteFileStep(
-        ((BuildRule) testRule).getProjectFilesystem(),
+        testRule.getProjectFilesystem(),
         ruleKey.toString(),
         getRuleKeyFilePath(testRule),
         /* executable */ false);
@@ -62,7 +61,7 @@ public class TestRuleKeyFileHelper {
    * @return true if a rule key is written in the specified directory.
    */
   public boolean isRuleKeyInDir(TestRule testRule) throws IOException {
-    ProjectFilesystem filesystem = ((BuildRule) testRule).getProjectFilesystem();
+    ProjectFilesystem filesystem = testRule.getProjectFilesystem();
     Path ruleKeyPath = filesystem.resolve(getRuleKeyFilePath(testRule));
     if (!Files.isRegularFile(ruleKeyPath)) {
       return false;

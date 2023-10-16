@@ -196,4 +196,9 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
     // TODO(pjameson): Add required paths when Runtime files API is implemented/stabilized
     return builder.build();
   }
+
+  @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return false;
+  }
 }

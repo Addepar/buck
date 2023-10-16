@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -67,4 +68,9 @@ public interface BuildEngine {
       return ImmutableBuildEngineResult.of(result);
     }
   }
+
+  /**
+   * This is a temporary hack to expose a build rule's rule key to the associated buildable.
+   */
+  RuleKey getRuleKey(BuildTarget buildTarget);
 }

@@ -386,10 +386,10 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean hasTestResultFiles() {
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
     // It is possible that this rule was not responsible for running any tests because all tests
     // were run by its deps. In this case, return an empty TestResults.
-    Set<String> testClassNames = getClassNamesForSources(getResolver());
+    Set<String> testClassNames = getClassNamesForSources(pathResolver);
     if (testClassNames.isEmpty()) {
       return true;
     }
@@ -452,9 +452,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Path testResultFile =
             getProjectFilesystem()
                 .getPathForRelativePath(getPathToTestOutputDirectory().resolve(path));
-        if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile)) {
+        if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile) && junits != null) {
           String message;
-          for (JUnitStep junit : Objects.requireNonNull(junits)) {
+          for (JUnitStep junit : junits) {
             if (junit.hasTimedOut()) {
               message = "test timed out before generating results file";
             } else {

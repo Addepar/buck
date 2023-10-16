@@ -310,7 +310,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   @Override
-  public boolean hasTestResultFiles() {
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
     Path testResultPath = getProjectFilesystem().resolve(
         getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
     return testResultPath.toFile().exists();

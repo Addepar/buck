@@ -22,6 +22,8 @@ import com.facebook.buck.android.AndroidInstrumentationTest;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
+import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -53,22 +55,6 @@ import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.BuildResult;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.IndividualTestEvent;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TestRule;
-import com.facebook.buck.rules.TestRunEvent;
-import com.facebook.buck.rules.TestStatusMessageEvent;
-import com.facebook.buck.rules.TestSummaryEvent;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -120,6 +106,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -151,7 +138,7 @@ public class TestRunning {
       BuildEngine buildEngine,
       BuildContext buildContext,
       SourcePathRuleFinder ruleFinder)
-      throws IOException, InterruptedException {
+    throws IOException, InterruptedException, ExecutionException {
 
     ImmutableSet<JavaLibrary> rulesUnderTestForCoverage;
     // If needed, we first run instrumentation on the class files.
@@ -221,6 +208,7 @@ public class TestRunning {
       isTestRunRequired = isTestRunRequiredForTest(
         test,
         buildEngine,
+        buildContext,
         executionContext,
         testRuleKeyFileHelper,
         options.getTestResultCacheMode(),
@@ -313,7 +301,9 @@ public class TestRunning {
           test.runTests(executionContext, options, buildContext, testReportingCallback);
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);
+          stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
         }
+        steps = stepsBuilder.build();
       } else {
         steps = ImmutableList.of();
       }
@@ -612,12 +602,12 @@ public class TestRunning {
     }
     return () -> {
       TestResults originalTestResults = originalCallable.call();
-      ImmutableList<TestCaseSummary> cachedTestResults = originalTestResults.getTestCases().stream()
+      List<TestCaseSummary> cachedTestResults = originalTestResults.getTestCases().stream()
           .map(TestCaseSummary.TO_CACHED_TRANSFORMATION::apply)
-          .collect(MoreCollectors.toImmutableList());
+          .collect(Collectors.toList());
       return TestResults.of(
           originalTestResults.getBuildTarget(),
-          cachedTestResults,
+          ImmutableList.copyOf(cachedTestResults),
           originalTestResults.getContacts(),
           originalTestResults.getLabels());
     };
@@ -627,6 +617,7 @@ public class TestRunning {
   static boolean isTestRunRequiredForTest(
       TestRule test,
       BuildEngine cachingBuildEngine,
+      BuildContext buildContext,
       ExecutionContext executionContext,
       TestRuleKeyFileHelper testRuleKeyFileHelper,
       TestRunningOptions.TestResultCacheMode resultCacheMode,
@@ -651,7 +642,7 @@ public class TestRunning {
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&
         result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
-        test.hasTestResultFiles() &&
+        test.hasTestResultFiles(buildContext.getSourcePathResolver()) &&
         testRuleKeyFileHelper.isRuleKeyInDir(test) &&
         (resultCacheMode == TestRunningOptions.TestResultCacheMode.ENABLED ||
             (resultCacheMode == TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED &&

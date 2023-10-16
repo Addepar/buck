@@ -398,4 +398,9 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Tool getExecutableCommand(OutputLabel outputLabel) {
     return testMain.getExecutableCommand(OutputLabel.defaultLabel());
   }
+
+  @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return getProjectFilesystem().isFile(getPathToTestResults());
+  }
 }

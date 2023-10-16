@@ -216,4 +216,9 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
 
     return summariesBuilder.build();
   }
+
+  @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return false;
+  }
 }

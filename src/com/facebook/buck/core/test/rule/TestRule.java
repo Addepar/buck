@@ -115,4 +115,14 @@ public interface TestRule extends BuildRule {
    *     testReportingCallback} as the tests run, false otherwise.
    */
   boolean supportsStreamingTests();
+
+  /**
+   * Returns a boolean indicating whether the files that contain the test results for this rule are
+   * present.
+   * <p>
+   * If this method returns {@code true}, then
+   * {@link #interpretTestResults(ExecutionContext, SourcePathResolverAdapter, boolean)} 
+   * should be able to be called directly.
+   */
+  boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver);
 }
