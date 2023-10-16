@@ -98,6 +98,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
@@ -340,7 +341,7 @@ public class TestCommand extends BuildCommand {
       Build build,
       BuildContext buildContext,
       Iterable<TestRule> testRules)
-      throws InterruptedException, IOException {
+      throws InterruptedException, IOException, ExecutionException {
 
     if (!withDashArguments.isEmpty()) {
       throw new CommandLineException(

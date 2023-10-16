@@ -107,7 +107,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean hasTestResultFiles() {
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
     // If result.json was not written, then the test needs to be run.
     return getProjectFilesystem().isFile(getPathToTestOutputResult());
   }

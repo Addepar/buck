@@ -107,6 +107,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   /** Creates a copy of {@code summary} with the specified value of {@code isCached}. */
   private TestCaseSummary(TestCaseSummary summary, boolean isCached) {
     this.testCaseName = summary.testCaseName;
+    this.testSuite = summary.testSuite;
     this.testResults = summary.testResults;
     this.isDryRun = summary.isDryRun;
     this.hasAssumptionViolations = summary.hasAssumptionViolations;

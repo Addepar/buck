@@ -48,32 +48,15 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeTestRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildResult;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildEngine;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.FakeTestResults;
@@ -514,7 +497,7 @@ public class TestRunningTest {
         ImmutableSortedSet.of()) {
 
       @Override
-      public boolean hasTestResultFiles() {
+      public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
         return true;
       }
     };
@@ -561,7 +544,7 @@ public class TestRunningTest {
         ImmutableSortedSet.of()) {
 
       @Override
-      public boolean hasTestResultFiles() {
+      public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
         return true;
       }
     };
@@ -617,7 +600,7 @@ public class TestRunningTest {
         ImmutableSortedSet.of()) {
 
       @Override
-      public boolean hasTestResultFiles() {
+      public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
         return true;
       }
     };

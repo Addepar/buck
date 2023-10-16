@@ -160,7 +160,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolverAdapter pathResolver, Path output);
 
   @Override
-  public boolean hasTestResultFiles() {
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
     return getProjectFilesystem().isFile(getPathToTestResults());
   }
 

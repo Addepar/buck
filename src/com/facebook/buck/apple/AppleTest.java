@@ -263,7 +263,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean hasTestResultFiles() {
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
     return getProjectFilesystem().exists(testOutputPath);
   }
 

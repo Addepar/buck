@@ -95,7 +95,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean hasTestResultFiles() {
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
     return false;
   }
 

@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.CoercedTestRunnerSpec;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.TestXRule;
@@ -125,5 +126,10 @@ public class GoTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Tool getExecutableCommand(OutputLabel outputLabel) {
     return testMain.getExecutableCommand(OutputLabel.defaultLabel());
+  }
+
+  @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return false;
   }
 }

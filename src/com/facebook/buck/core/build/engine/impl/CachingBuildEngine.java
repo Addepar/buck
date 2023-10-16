@@ -144,6 +144,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
+  private final ConcurrentMap<BuildTarget, ListenableFuture<RuleKey>> ruleKeys = Maps.newConcurrentMap();
+
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
@@ -435,7 +437,23 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private ListenableFuture<RuleKey> calculateRuleKey(
       BuildRule rule, BuildEngineBuildContext context) {
-    return ruleKeyCalculator.calculate(context.getEventBus(), rule);
+
+    ListenableFuture<RuleKey> fromOurCache = ruleKeys.get(rule.getBuildTarget());
+    if (fromOurCache != null) {
+      return fromOurCache;
+    }
+
+    ListenableFuture<RuleKey> calculated = ruleKeyCalculator.calculate(context.getEventBus(), rule);
+
+    // Record the rule key future.
+    ruleKeys.put(rule.getBuildTarget(), calculated);
+
+    return calculated;
+  }
+
+  @Override
+  public RuleKey getRuleKey(BuildTarget buildTarget) {
+    return Preconditions.checkNotNull(Futures.getUnchecked(ruleKeys.get(buildTarget)));
   }
 
   @Override

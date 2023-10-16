@@ -30,7 +30,7 @@ public abstract class TestRunningOptions {
   public enum TestResultCacheMode {
     ENABLED,
     ENABLED_IF_PASSED,
-    DISAB
+    DISABLED
   }
 
   @Value.Default

@@ -151,6 +151,11 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return false;
+  }
+
+  @Override
   public CoercedTestRunnerSpec getSpecs() {
     return specs;
   }
