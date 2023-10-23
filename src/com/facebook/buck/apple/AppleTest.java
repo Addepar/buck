@@ -262,6 +262,11 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return contacts;
   }
 
+  @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return getProjectFilesystem().exists(testOutputPath);
+  }
+
   public Pair<ImmutableList<Step>, ExternalTestRunnerTestSpec> getTestCommand(
       ExecutionContext context,
       TestRunningOptions options,

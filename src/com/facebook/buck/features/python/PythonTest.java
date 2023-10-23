@@ -294,4 +294,9 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
     this.ruleResolver = ruleResolver;
   }
+
+  @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return getProjectFilesystem().isFile(getPathToTestOutputResult());
+  }
 }

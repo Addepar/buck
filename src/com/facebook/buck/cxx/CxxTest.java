@@ -160,6 +160,11 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolverAdapter pathResolver, Path output);
 
   @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return getProjectFilesystem().isFile(getPathToTestResults());
+  }
+
+  @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,

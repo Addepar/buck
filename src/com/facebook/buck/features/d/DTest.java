@@ -120,6 +120,11 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return getProjectFilesystem().isFile(getPathToTestOutput());
+  }
+
+  @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
       SourcePathResolverAdapter pathResolver,

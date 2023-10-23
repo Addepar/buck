@@ -386,6 +386,29 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    // It is possible that this rule was not responsible for running any tests because all tests
+    // were run by its deps. In this case, return an empty TestResults.
+    Set<String> testClassNames = getClassNamesForSources(pathResolver);
+    if (testClassNames.isEmpty()) {
+      return true;
+    }
+
+    Path outputDirectory = getProjectFilesystem()
+        .getPathForRelativePath(getPathToTestOutputDirectory());
+    for (String testClass : testClassNames) {
+      // We never use cached results when using test selectors, so there's no need to incorporate
+      // the .test_selectors suffix here if we are using selectors.
+      Path testResultFile = outputDirectory.resolve(testClass + ".xml");
+      if (!Files.isRegularFile(testResultFile)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__");
@@ -429,9 +452,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Path testResultFile =
             getProjectFilesystem()
                 .getPathForRelativePath(getPathToTestOutputDirectory().resolve(path));
-        if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile)) {
+        if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile) && junits != null) {
           String message;
-          for (JUnitStep junit : Objects.requireNonNull(junits)) {
+          for (JUnitStep junit : junits) {
             if (junit.hasTimedOut()) {
               message = "test timed out before generating results file";
             } else {

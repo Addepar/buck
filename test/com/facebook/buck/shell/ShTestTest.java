@@ -18,15 +18,20 @@ package com.facebook.buck.shell;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +42,34 @@ import java.util.Optional;
 import org.junit.Test;
 
 public class ShTestTest {
+
+  @Test
+  public void testHasTestResultFiles() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())
+    );
+    ShTest shTest = new ShTest(
+        new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
+            .setProjectFilesystem(filesystem)
+            .build(),
+        ruleFinder,
+        new FakeSourcePath("run_test.sh"),
+        /* args */ ImmutableList.of(),
+        /* env */ ImmutableMap.of(),
+        /* resources */ ImmutableSortedSet.of(),
+        Optional.empty(),
+        /* runTestSeparately */ false,
+        /* labels */ ImmutableSet.of(),
+        /* contacts */ ImmutableSet.of());
+    filesystem.touch(shTest.getPathToTestOutputResult());
+    assertTrue(
+        "hasTestResultFiles() should return true if result.json exists.",
+        shTest.hasTestResultFiles(null));
+  }
 
   @Test
   public void depsAreRuntimeDeps() {

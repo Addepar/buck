@@ -95,6 +95,11 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+    return false;
+  }
+
+  @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,

@@ -17,8 +17,17 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOCALLY;
+import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
+import static com.facebook.buck.rules.BuildRuleSuccessType.FETCHED_FROM_CACHE;
+import static com.facebook.buck.rules.BuildRuleSuccessType.MATCHING_RULE_KEY;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -39,15 +48,15 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeTestRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
+import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.FakeTestResults;
@@ -62,15 +71,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.Callables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.parsers.DocumentBuilder;
@@ -369,6 +381,294 @@ public class TestRunningTest {
     assertTrue(
         ((firstChild == null) && (expectedStr.equals("")))
             || ((firstChild != null) && expectedStr.equals(firstChild.getNodeValue())));
+  }
+
+  @Test
+  public void testIsTestRunRequiredForTestInDebugMode()
+      throws IOException, ExecutionException, InterruptedException {
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setDebugEnabled(true)
+        .build();
+    assertTrue(executionContext.isDebugEnabled());
+
+    assertTrue(
+        "In debug mode, test should always run regardless of any cached results since " +
+            "the user is expecting to hook up a debugger.",
+        TestRunning.isTestRunRequiredForTest(
+            createMock(TestRule.class),
+            createMock(CachingBuildEngine.class),
+            executionContext,
+            createMock(TestRuleKeyFileHelper.class),
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
+            false,
+            /* hasEnvironmentOverrides */ false));
+  }
+
+  @Test
+  public void testIsTestRunRequiredForTestBuiltFromCacheIfHasTestResultFiles()
+      throws IOException, ExecutionException, InterruptedException {
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    assertFalse(executionContext.isDebugEnabled());
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of("windows"),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(new SourcePathRuleFinder(
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        )),
+        ImmutableSortedSet.of());
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, FETCHED_FROM_CACHE, CacheResult.hit("dir"));
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result);
+    replay(cachingBuildEngine);
+
+    assertTrue(
+        "A cache hit updates the build artifact but not the test results. " +
+            "Therefore, the test should be re-run to ensure the test results are up to date.",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            createMock(TestRuleKeyFileHelper.class),
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+
+    verify(cachingBuildEngine);
+  }
+
+  @Test
+  public void testIsTestRunRequiredForTestBuiltLocally()
+      throws IOException, ExecutionException, InterruptedException {
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    assertFalse(executionContext.isDebugEnabled());
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of("windows"),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(new SourcePathRuleFinder(
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        )),
+        ImmutableSortedSet.of());
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.miss());
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result);
+    replay(cachingBuildEngine);
+
+    assertTrue(
+        "A test built locally should always run regardless of any cached result. ",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            createMock(TestRuleKeyFileHelper.class),
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+
+    verify(cachingBuildEngine);
+  }
+
+  @Test
+  public void testIsTestRunRequiredIfRuleKeyNotPresent()
+      throws IOException, ExecutionException, InterruptedException {
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    assertFalse(executionContext.isDebugEnabled());
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of("windows"),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(new SourcePathRuleFinder(
+            new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())
+        )),
+        ImmutableSortedSet.of()) {
+
+      @Override
+      public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+        return true;
+      }
+    };
+
+    TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
+    expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result);
+    replay(cachingBuildEngine, testRuleKeyFileHelper);
+
+    assertTrue(
+        "A cached build should run the tests if the test output directory\'s rule key is not " +
+            "present or does not matche the rule key for the test.",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+
+    verify(cachingBuildEngine, testRuleKeyFileHelper);
+  }
+
+  @Test
+  public void testRunAlwaysRequiredIfEnvironmentOverridesPresent() throws Exception {
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setDebugEnabled(false)
+        .build();
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of("windows"),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer())
+        )),
+        ImmutableSortedSet.of()) {
+
+      @Override
+      public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+        return true;
+      }
+    };
+
+    TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
+    expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(true).times(1);
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result).times(1);
+    replay(cachingBuildEngine, testRuleKeyFileHelper);
+
+    assertFalse(
+        "Test will normally not be rerun",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+    assertTrue(
+        "Test will be rerun when environment overrides are present",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ true));
+
+    verify(cachingBuildEngine, testRuleKeyFileHelper);
+  }
+
+  @Test
+  public void testRunWhenPreviouslyFailed() throws Exception {
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setDebugEnabled(false)
+        .build();
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of("windows"),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(new SourcePathRuleFinder(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer()))),
+        ImmutableSortedSet.of()) {
+
+      @Override
+      public boolean hasTestResultFiles(SourcePathResolverAdapter pathResolver) {
+        return true;
+      }
+    };
+
+    TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
+    expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(true).times(2);
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result).times(2);
+    replay(cachingBuildEngine, testRuleKeyFileHelper);
+
+    final TestResults failedTestResults =
+        FakeTestResults.of(
+            ImmutableList.of(
+                new TestCaseSummary(
+                    "TestCase",
+                    ImmutableList.of(
+                        new TestResultSummary(
+                            "TestCaseResult",
+                            "passTest",
+                            ResultType.FAILURE,
+                            5000,
+                            null,
+                            null,
+                            null,
+                            null)))));
+    assertTrue(
+        "Test will be rerun if it previously failed",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED,
+            Callables.<TestResults>returning(failedTestResults),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+
+    final TestResults passedTestResults =
+        FakeTestResults.of(
+            ImmutableList.of(
+                new TestCaseSummary(
+                    "TestCase",
+                    ImmutableList.of(
+                        new TestResultSummary(
+                            "TestCaseResult",
+                            "passTest",
+                            ResultType.SUCCESS,
+                            5000,
+                            null,
+                            null,
+                            null,
+                            null)))));
+    assertFalse(
+        "Test will be not rerun if it previously passed",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED,
+            Callables.<TestResults>returning(passedTestResults),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false));
+
+    verify(cachingBuildEngine, testRuleKeyFileHelper);
   }
 
   @Test

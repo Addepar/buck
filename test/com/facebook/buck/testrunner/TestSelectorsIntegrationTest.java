@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testrunner;
 
+import static com.facebook.buck.testutil.OutputHelper.containsBuckTestOutputLine;
+import static com.facebook.buck.util.Verbosity.BINARY_OUTPUTS;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -81,6 +83,34 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
+  public void shouldNeverCacheWhenUsingSelectors() {
+    String spammyTestOutput = String.valueOf(BINARY_OUTPUTS.ordinal());
+    String[] commandWithoutSelector =
+        {"test", "--config", "test.use_results_cache=true", "-v", spammyTestOutput, "--all"};
+    String[] commandWithSelector =
+        {"test", "--config", "test.use_results_cache=true", "-v", spammyTestOutput, "--all",
+            "--test-selectors", "#testIsComical"};
+
+    // Without selectors, the first run isn't cached and the second run is.
+    ProcessResult result1 = workspace.runBuckCommand(commandWithoutSelector);
+    assertNotCached(result1);
+    assertOutputWithoutSelectors(result1);
+    assertCached(workspace.runBuckCommand(commandWithoutSelector));
+
+    // With a selector, runs are not cached.
+    ProcessResult result2 = workspace.runBuckCommand(commandWithSelector);
+    assertNotCached(result2);
+    assertOutputWithSelectors(result2);
+    assertNotCached(workspace.runBuckCommand(commandWithSelector));
+
+    // But when we go back to not using a selector, the first run is uncached, and the second is.
+    ProcessResult result3 = workspace.runBuckCommand(commandWithoutSelector);
+    assertNotCached(result3);
+    assertOutputWithoutSelectors(result3);
+    assertCached(workspace.runBuckCommand(commandWithoutSelector));
+  }
+
+  @Test
   public void shouldNotMatchMethodsUsingPrefixAlone() {
     String[] command = {"test", "--all", "--test-selectors", "#test"};
     ProcessResult result = workspace.runBuckCommand(command);
@@ -140,6 +170,38 @@ public class TestSelectorsIntegrationTest {
     assertThat(filteredTestResult.getStderr(), containsString("1 Passed"));
   }
 
+  private void assertOutputWithSelectors(ProcessResult result) {
+    String stderr = result.getStderr();
+    assertThat("CarTest contains matching test that passes",
+        stderr, containsBuckTestOutputLine(
+        "PASS", 1, 0, 0, "com.example.clown.CarTest"));
+    assertThat("FlowerTest contains matching test, but it is @Ignored",
+        stderr, containsBuckTestOutputLine(
+        "NOTESTS", 0, 1, 0, "com.example.clown.FlowerTest"));
+    assertThat("PrimeMinisterialDecreeTest contains matching test, but it has assumption violation",
+        stderr, containsBuckTestOutputLine(
+        "ASSUME", 0, 1, 0, "com.example.clown.PrimeMinisterialDecreeTest"));
+    assertThat("ShoesTest should not appear, because it has no matches",
+        stderr, not(containsString("com.example.clown.ShoesTest")));
+  }
+
+  private void assertOutputWithoutSelectors(ProcessResult result) {
+    String stderr = result.getStderr();
+    assertThat(stderr, containsBuckTestOutputLine(
+        "PASS", 2, 1, 0, "com.example.clown.CarTest"));
+    assertThat(stderr, containsBuckTestOutputLine(
+        "PASS", 2, 1, 0, "com.example.clown.FlowerTest"));
+    assertThat(stderr, containsBuckTestOutputLine(
+        "FAIL", 4, 1, 1, "com.example.clown.PrimeMinisterialDecreeTest"));
+    assertThat(stderr, containsBuckTestOutputLine(
+        "PASS", 2, 0, 0, "com.example.clown.ShoesTest"));
+    assertTestSummaryShown(result);
+  }
+
+  private void assertCached(ProcessResult result) {
+    assertThat(result.getStderr(), containsString("CACHED"));
+  }
+
   private void assertNotCached(ProcessResult result) {
     assertThat(result.getStderr(), not(containsString("CACHED")));
   }
@@ -159,6 +221,10 @@ public class TestSelectorsIntegrationTest {
 
   private void assertTestsPassed(ProcessResult result) {
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
+  }
+
+  private void assertTestSummaryShown(ProcessResult result) {
+    assertThat(result.getStderr(), containsString("Results for //test/com/example/clown:clown"));
   }
 
   private void assertNoTestSummaryShown(ProcessResult result) {
