@@ -57,7 +57,7 @@ public class TestRuleKeyFileHelper {
   }
 
   /**
-   * Checks if a matching rule key file for a test is present in its directoryReturns
+   * Checks if a matching rule key file for a test is present in its directory
    * @return true if a rule key is written in the specified directory.
    */
   public boolean isRuleKeyInDir(TestRule testRule) throws IOException {

@@ -17,18 +17,35 @@
 package com.facebook.buck.util.environment;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /** Provides access system environment variables of the current process. */
 public class EnvVariablesProvider {
+  private static final List<String> BUCK_ENV_VARS_TO_EXCLUDE = Arrays.asList(
+    System.getenv().getOrDefault("BUCK_ENV_VARS_TO_EXCLUDE", "").split(","));
 
   @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   public static ImmutableMap<String, String> getSystemEnv() {
-    if (Platform.detect().getType() == PlatformType.WINDOWS) {
-      return System.getenv().entrySet().stream()
-          .collect(ImmutableMap.toImmutableMap(e -> e.getKey().toUpperCase(), Map.Entry::getValue));
-    } else {
-      return ImmutableMap.copyOf(System.getenv());
-    }
+    return getAllSystemEnv()
+      .entrySet()
+      .stream()
+      .filter(e -> !BUCK_ENV_VARS_TO_EXCLUDE.contains(e.getKey()))
+      .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  private static Map<String, String> getAllSystemEnv() {
+    return isWindows() ? getWindowsEnv() : System.getenv();
+  }
+
+  private static boolean isWindows() {
+    return Platform.detect().getType() == PlatformType.WINDOWS;
+  }
+
+  private static Map<String, String> getWindowsEnv() {
+    return System.getenv().entrySet().stream()
+      .collect(Collectors.toMap(e -> e.getKey().toUpperCase(), Map.Entry::getValue));
   }
 }
