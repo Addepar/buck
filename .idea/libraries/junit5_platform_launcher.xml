@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="junit5-platform-launcher">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-platform-launcher" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-platform-launcher" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-platform-launcher" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-platform-launcher" recursive="false" type="SOURCES" />
+  </library>
+</component>

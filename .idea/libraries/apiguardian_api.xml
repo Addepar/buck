@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="apiguardian-api">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/apiguardian-api" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/third-party/java/apiguardian-api" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/apiguardian-api" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/apiguardian-api" recursive="false" type="SOURCES" />
+  </library>
+</component>

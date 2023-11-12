@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="junit5-platform-commons">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-platform-commons" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-platform-commons" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-platform-commons" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-platform-commons" recursive="false" type="SOURCES" />
+  </library>
+</component>

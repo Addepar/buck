@@ -100,7 +100,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/zip/collect/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />
     </content>
-    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
+    <orderEntry type="jdk" jdkName="11" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="asm" level="project" />
     <orderEntry type="library" name="buck-lib" level="project" />
@@ -159,5 +159,13 @@
     <orderEntry type="library" name="kotlinx-metadata" level="project" />
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
     <orderEntry type="library" name="log4j2" level="project" />
+    <orderEntry type="library" name="junit5-jupiter-api" level="project" />
+    <orderEntry type="library" name="junit5-platform-engine" level="project" />
+    <orderEntry type="library" name="junit5-platform-launcher" level="project" />
+    <orderEntry type="library" name="junit5-jupiter-api" level="project" />
+    <orderEntry type="library" name="junit5-platform-engine" level="project" />
+    <orderEntry type="library" name="junit5-platform-launcher" level="project" />
+    <orderEntry type="library" name="junit5-platform-commons" level="project" />
+    <orderEntry type="library" name="apiguardian-api" level="project" />
   </component>
 </module>

@@ -30,6 +30,8 @@ java_library(
         "JUnitMain.java",
         "JUnitRunner.java",
         "JulLogFormatter.java",
+        "Junit4TestListener.java",
+        "Junit5TestListener.java",
         "SameThreadFailOnTimeout.java",
     ],
     source = "8",
@@ -51,7 +53,12 @@ java_library(
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
+        "//third-party/java/apiguardian-api:apiguardian-api",
         "//third-party/java/junit:junit",
+        "//third-party/java/junit5-jupiter-api:junit5-jupiter-api",
+        "//third-party/java/junit5-platform-commons:junit5-platform-commons",
+        "//third-party/java/junit5-platform-engine:junit5-platform-engine",
+        "//third-party/java/junit5-platform-launcher:junit5-platform-launcher",
     ],
 )
 

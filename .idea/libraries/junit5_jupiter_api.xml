@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="junit5-jupiter-api">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-api" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-api" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-api" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-api" recursive="false" type="SOURCES" />
+  </library>
+</component>
