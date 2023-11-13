@@ -47,16 +47,41 @@ Buck tries to move fast with respect to its internals. However, for user facing 
 - For larger features, a change eventually is put in place that sets the default to the new behavior. e.g. when Skylark becomes the default build file parser.
 - When the removal date is reached, a change is submitted to remove the feature. At this point, the configuration value will still parse, but will not be used by Buck internally.
 
-Updating the Buck executable in AMP
+Developing with the Buck executable in AMP
 -----------------------------------
 
-To update `buck.pex` from AMP, run the following in this repo:
+To build and use a developmental `buck.pex` in AMP temporarily, run the following in this repo:
 
     ant
     ./bin/buck build --config java.target_level=11 --config java.source_level=11  --config python.interpreter=python2 --config python.pex_flags='' buck --show-output
     cp ./buck-out/gen/<hash>/programs/buck.pex <location-of-AMP-directory>
+    touch <location-of-AMP-directory>/.ignore-buck-version
 
-Note: `<hash>` is an 8 letter SHA prefix that will depend on which buck commit you're on.
+Note: `<hash>` is an 8 letter SHA prefix that will depend on which buck commit you're on. `.ignore-buck-version` is important since without that file, AMP will try to download the version of buck specified in `.buckversion_` instead of using the one you just copied into AMP. 
+
+If ant fails with compilation errors on the latest release, try running
+
+    ant clean all
+
+Releasing a new version of Buck in AMP
+-----------------------------------
+
+Once you're satisfied with a new version of Buck, you can release it to AMP by following these steps:
+
+##### 1. Merge the new release into github. 
+
+Raise a PR against the branch `v2022.05.05.01` in https://github.com/Addepar/buck. Get it approved and merged. 
+
+##### 2. Create a new release
+
+Go to https://github.com/Addepar/buck/releases and draft a new release, incrementing the version by 1, e.g. v7 to v8. 
+Make sure to compute the buck.pex SHA1 hash by running `shasum buck.pex` in this repo and make a note of this hash in the release notes.  
+Also include a link to the PR created in step 1 above.
+
+##### 2. Update the version and buck SHA1 hash in AMP
+
+Raise a PR in AMP updating the buck version and SHA1 hash in `buck.sh` in the AMP repo. 
+See [this PR](https://github.com/Addepar/AMP/pull/68478/files#diff-dcd8a834dc1ea51b6d597c2247ada269b6e35bdd254a2907925d703d506f1872) for an example. 
 
 License
 -------

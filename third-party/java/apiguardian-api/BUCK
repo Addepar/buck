@@ -1,0 +1,15 @@
+prebuilt_jar(
+    name = "apiguardian-api",
+    binary_jar = "apiguardian-api-1.1.2.jar",
+    javadoc_url = "https://javadoc.io/doc/org.apiguardian/apiguardian-api/latest/index.html",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    source_jar = "apiguardian-api-1.1.2-sources.jar",
+    visibility = [
+        "//src/com/facebook/buck/testrunner:junit",
+        "//test/...",
+        "//third-party/java/aosp/...",
+        "//tools/...",
+    ],
+)
