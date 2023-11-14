@@ -95,7 +95,8 @@ public final class JUnitRunner extends BaseRunner {
             .selectors(selectClass(testClass))
             .build();
         Launcher launcher = LauncherFactory.create();
-        launcher.execute(request, new Junit5TestListener(results, stdOutLogLevel, stdErrLogLevel));
+        Junit5TestListener listener = new Junit5TestListener(results, stdOutLogLevel, stdErrLogLevel, testClass);
+        launcher.execute(request, listener);
       }
       // Combine the results with the tests we filtered out
       List<TestResult> actualResults = combineResults(results, filter.filteredOut);
