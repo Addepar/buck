@@ -31,14 +31,16 @@ public class Junit5TestListener implements TestExecutionListener {
   /* @Nullable */ private Handler julErrLogHandler;
   /* @Nullable */ private TestIdentifier testIdentifier;
   private final SummaryGeneratingListener listener = new SummaryGeneratingListener();
+  private final Class<?> testClass;
 
   // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
   private final long startTime = System.currentTimeMillis();
 
-  public Junit5TestListener(List<TestResult> results, Level stdErrLogLevel, Level stdOutLogLevel) {
+  public Junit5TestListener(List<TestResult> results, Level stdErrLogLevel, Level stdOutLogLevel, Class<?> testClass) {
     this.results = results;
     this.stdErrLogLevel = stdErrLogLevel;
     this.stdOutLogLevel = stdOutLogLevel;
+    this.testClass = testClass;
   }
 
   @Override
@@ -53,10 +55,12 @@ public class Junit5TestListener implements TestExecutionListener {
     // report all failures as unbounded
     for (TestExecutionSummary.Failure failure : listener.getSummary().getFailures()) {
       long runtime = System.currentTimeMillis() - startTime;
+      String className = testClass.getCanonicalName();
+      String methodName = testIdentifier.getDisplayName().replace("()", "");
       results.add(
         new TestResult(
-          testIdentifier.getDisplayName(),
-          testIdentifier.getDisplayName(),
+          className,
+          methodName,
           runtime,
           ResultType.FAILURE,
           failure.getException(),
@@ -122,6 +126,7 @@ public class Junit5TestListener implements TestExecutionListener {
 
     // Shutdown single-test result.
     listener.executionFinished(testIdentifier, testExecutionResult);
+    listener.testPlanExecutionFinished(null);
 
     // Restore the original stdout/stderr.
     System.setOut(originalOut);
@@ -142,8 +147,6 @@ public class Junit5TestListener implements TestExecutionListener {
 
     TestExecutionSummary summary = listener.getSummary();
     long numFailures = summary.getTestsFailedCount();
-    String className = testIdentifier.getDisplayName();
-    String methodName = testIdentifier.getDisplayName();
 
     TestExecutionSummary.Failure failure;
     ResultType type;
@@ -174,6 +177,8 @@ public class Junit5TestListener implements TestExecutionListener {
       throw new RuntimeException(e);
     }
 
+    String className = testClass.getCanonicalName();
+    String methodName = testIdentifier.getDisplayName().replace("()", "");
     long runTime = summary.getTimeFinished() - summary.getTimeStarted();
     results.add(
       new TestResult(
