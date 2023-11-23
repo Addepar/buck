@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="junit5-jupiter-params">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-params" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-params" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-params" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junit5-jupiter-params" recursive="false" type="SOURCES" />
+  </library>
+</component>

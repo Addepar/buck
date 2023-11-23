@@ -160,9 +160,7 @@
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
     <orderEntry type="library" name="log4j2" level="project" />
     <orderEntry type="library" name="junit5-jupiter-api" level="project" />
-    <orderEntry type="library" name="junit5-platform-engine" level="project" />
-    <orderEntry type="library" name="junit5-platform-launcher" level="project" />
-    <orderEntry type="library" name="junit5-jupiter-api" level="project" />
+    <orderEntry type="library" name="junit5-jupiter-params" level="project" />
     <orderEntry type="library" name="junit5-platform-engine" level="project" />
     <orderEntry type="library" name="junit5-platform-launcher" level="project" />
     <orderEntry type="library" name="junit5-platform-commons" level="project" />
