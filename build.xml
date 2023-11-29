@@ -371,6 +371,7 @@
     <include name="jsr/jsr305.jar" />
     <include name="junit/junit-4.12.jar" />
     <include name="junit5-jupiter-api/junit-jupiter-api-5.10.1.jar" />
+    <include name="junit5-jupiter-params/junit-jupiter-params-5.10.1.jar" />
     <include name="junit5-platform-commons/junit-platform-commons-1.10.1.jar" />
     <include name="junit5-platform-engine/junit-platform-engine-1.10.1.jar" />
     <include name="junit5-platform-launcher/junit-platform-launcher-1.10.1.jar" />
@@ -1252,6 +1253,7 @@
     <pathelement location="${third-party.dir}/java/apiguardian-api/apiguardian-api-1.1.2.jar" />
     <pathelement location="${third-party.dir}/java/junit/junit-4.12.jar" />
     <pathelement location="${third-party.dir}/java/junit5-jupiter-api/junit-jupiter-api-5.10.1.jar" />
+    <pathelement location="${third-party.dir}/java/junit5-jupiter-params/junit-jupiter-params-5.10.1.jar" />
     <pathelement location="${third-party.dir}/java/junit5-platform-commons/junit-platform-commons-1.10.1.jar" />
     <pathelement location="${third-party.dir}/java/junit5-platform-engine/junit-platform-engine-1.10.1.jar" />
     <pathelement location="${third-party.dir}/java/junit5-platform-launcher/junit-platform-launcher-1.10.1.jar" />

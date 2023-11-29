@@ -151,7 +151,8 @@ public final class JUnitRunner extends BaseRunner {
 
   private boolean mightBeJunit5TestClass(Class<?> klass) {
     for (Method m : klass.getMethods()) {
-      if (m.getAnnotation(org.junit.jupiter.api.Test.class) != null) {
+      if (m.getAnnotation(org.junit.jupiter.api.Test.class) != null ||
+          m.getAnnotation(org.junit.jupiter.params.ParameterizedTest.class) != null) {
         return true;
       }
     }
