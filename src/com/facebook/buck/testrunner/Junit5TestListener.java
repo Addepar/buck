@@ -34,17 +34,21 @@ public class Junit5TestListener implements TestExecutionListener {
   private final Class<?> testClass;
 
   // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
-  private final long startTime = System.currentTimeMillis();
+  private long testStartTime;
+  private long testPlanStartTime;
 
   public Junit5TestListener(List<TestResult> results, Level stdErrLogLevel, Level stdOutLogLevel, Class<?> testClass) {
     this.results = results;
     this.stdErrLogLevel = stdErrLogLevel;
     this.stdOutLogLevel = stdOutLogLevel;
     this.testClass = testClass;
+    this.testStartTime = System.currentTimeMillis();
+    this.testPlanStartTime = System.currentTimeMillis();
   }
 
   @Override
   public void testPlanExecutionStarted(TestPlan testPlan) {
+    this.testPlanStartTime = System.currentTimeMillis();
     listener.testPlanExecutionStarted(testPlan);
   }
 
@@ -54,7 +58,7 @@ public class Junit5TestListener implements TestExecutionListener {
     // testStarted was called for latest test, but not the testFinished
     // report all failures as unbounded
     for (TestExecutionSummary.Failure failure : listener.getSummary().getFailures()) {
-      long runtime = System.currentTimeMillis() - startTime;
+      long runtime = System.currentTimeMillis() - this.testPlanStartTime;
       String className = testClass.getCanonicalName();
       String methodName = testIdentifier.getDisplayName().replace("()", "");
       results.add(
@@ -81,7 +85,6 @@ public class Junit5TestListener implements TestExecutionListener {
     if (!testIdentifier.isTest()) {
       return;
     }
-
     // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
     // form of System.out.println) the developer is using to debug the test.
     originalOut = System.out;
@@ -111,6 +114,7 @@ public class Junit5TestListener implements TestExecutionListener {
     julLogHandler = addStreamHandler(rootLogger, julLogBytes, formatter, stdOutLogLevel);
     julErrLogHandler = addStreamHandler(rootLogger, julErrLogBytes, formatter, stdErrLogLevel);
 
+    this.testStartTime = System.currentTimeMillis();
     listener.executionStarted(testIdentifier);
   }
 
@@ -179,7 +183,7 @@ public class Junit5TestListener implements TestExecutionListener {
 
     String className = testClass.getCanonicalName();
     String methodName = testIdentifier.getDisplayName().replace("()", "");
-    long runTime = summary.getTimeFinished() - summary.getTimeStarted();
+    long runTime = System.currentTimeMillis() - this.testStartTime;
     results.add(
       new TestResult(
         className,
