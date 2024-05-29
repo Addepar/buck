@@ -34,7 +34,7 @@ public class Junit5TestListener implements TestExecutionListener {
   private final Class<?> testClass;
 
   // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
-  private final long startTime = System.currentTimeMillis();
+  private long startTime = System.currentTimeMillis();
 
   public Junit5TestListener(List<TestResult> results, Level stdErrLogLevel, Level stdOutLogLevel, Class<?> testClass) {
     this.results = results;
@@ -81,6 +81,7 @@ public class Junit5TestListener implements TestExecutionListener {
     if (!testIdentifier.isTest()) {
       return;
     }
+    this.startTime = System.currentTimeMillis();
 
     // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
     // form of System.out.println) the developer is using to debug the test.
@@ -179,7 +180,7 @@ public class Junit5TestListener implements TestExecutionListener {
 
     String className = testClass.getCanonicalName();
     String methodName = testIdentifier.getDisplayName().replace("()", "");
-    long runTime = summary.getTimeFinished() - summary.getTimeStarted();
+    long runTime = System.currentTimeMillis() - this.startTime;
     results.add(
       new TestResult(
         className,
