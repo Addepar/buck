@@ -17,6 +17,7 @@
 package com.facebook.buck.testrunner;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelector;
@@ -90,13 +91,24 @@ public final class JUnitRunner extends BaseRunner {
         jUnitCore.addListener(new Junit4TestListener(results, stdOutLogLevel, stdErrLogLevel, isDryRun));
         jUnitCore.run(request);
       } else if (mightBeJunit5TestClass(testClass)) {
-        LauncherDiscoveryRequest request =
-          LauncherDiscoveryRequestBuilder.request()
-            .selectors(selectClass(testClass))
-            .build();
+        LauncherDiscoveryRequestBuilder requestBuilder = LauncherDiscoveryRequestBuilder.request();
+        if (testSelectorList.isEmpty()) {
+          requestBuilder = requestBuilder.selectors(selectClass(testClass));
+        } else {
+          for (TestSelector selector : testSelectorList.getSelectors()) {
+            if (selector.matchesClassName(testClass.getSimpleName())) {
+              if (selector.isMatchAnyMethod()) {
+                requestBuilder = requestBuilder.selectors(selectClass(testClass));
+              } else {
+                requestBuilder = requestBuilder.selectors(selectMethod(testClass, selector.getMethod()));
+              }
+              break;
+            }
+          }
+        }
         Launcher launcher = LauncherFactory.create();
         Junit5TestListener listener = new Junit5TestListener(results, stdOutLogLevel, stdErrLogLevel, testClass);
-        launcher.execute(request, listener);
+        launcher.execute(requestBuilder.build(), listener);
       }
       // Combine the results with the tests we filtered out
       List<TestResult> actualResults = combineResults(results, filter.filteredOut);
