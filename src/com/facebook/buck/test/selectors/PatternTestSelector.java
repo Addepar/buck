@@ -141,6 +141,16 @@ public class PatternTestSelector implements TestSelector {
         isMatchAnyMethod() ? "<any>" : methodPattern);
   }
 
+  @Nullable
+  @Override
+  public String getMethod() {
+    if (methodPattern == null) {
+      return null;
+    }
+    String methodPatternString = methodPattern.toString();
+    return methodPatternString.substring(0, methodPatternString.length() - 1);
+  }
+
   @Override
   public boolean isInclusive() {
     return inclusive;

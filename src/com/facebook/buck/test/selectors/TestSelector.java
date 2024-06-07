@@ -25,6 +25,9 @@ public interface TestSelector {
 
   String getExplanation();
 
+  @Nullable
+  String getMethod();
+
   boolean isInclusive();
 
   boolean isMatchAnyClass();

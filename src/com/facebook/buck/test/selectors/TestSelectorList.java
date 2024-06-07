@@ -111,6 +111,10 @@ public class TestSelectorList {
     return rawSelectors;
   }
 
+  public List<TestSelector> getSelectors() {
+    return testSelectors;
+  }
+
   public boolean isEmpty() {
     return testSelectors.isEmpty();
   }

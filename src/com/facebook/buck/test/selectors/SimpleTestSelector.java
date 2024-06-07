@@ -46,6 +46,12 @@ public class SimpleTestSelector implements TestSelector {
         isMatchAnyClass() ? "<any>" : className, isMatchAnyMethod() ? "<any>" : methodName);
   }
 
+  @Nullable
+  @Override
+  public String getMethod() {
+    return methodName;
+  }
+
   @Override
   public boolean isInclusive() {
     return true;
