@@ -52,27 +52,6 @@ public class Junit5TestListener implements TestExecutionListener {
     listener.testPlanExecutionStarted(testPlan);
   }
 
-  // compare to Junit4TestListener.testRunFinished
-  @Override
-  public void testPlanExecutionFinished(TestPlan testPlan) {
-    // testStarted was called for latest test, but not the testFinished
-    // report all failures as unbounded
-    for (TestExecutionSummary.Failure failure : listener.getSummary().getFailures()) {
-      long runtime = System.currentTimeMillis() - this.testPlanStartTime;
-      String className = testClass.getCanonicalName();
-      String methodName = testIdentifier.getDisplayName().replace("()", "");
-      results.add(
-        new TestResult(
-          className,
-          methodName,
-          runtime,
-          ResultType.FAILURE,
-          failure.getException(),
-          null,
-          null));
-    }
-  }
-
   // compare to Junit4TestListener.testIgnored
   @Override
   public void executionSkipped(TestIdentifier testIdentifier, String reason) {
@@ -150,16 +129,14 @@ public class Junit5TestListener implements TestExecutionListener {
     stdErrStream.flush();
 
     TestExecutionSummary summary = listener.getSummary();
-    long numFailures = summary.getTestsFailedCount();
-
-    TestExecutionSummary.Failure failure;
-    ResultType type;
-    if (numFailures == 0) {
-      failure = null;
-      type = ResultType.SUCCESS;
-    } else {
-      failure = summary.getFailures().get(0);
-      type = ResultType.FAILURE;
+    TestExecutionSummary.Failure failure = null;
+    ResultType type = ResultType.SUCCESS;
+    for(TestExecutionSummary.Failure f : summary.getFailures()) {
+      if(f.getTestIdentifier().equals(testIdentifier)) {
+        failure = f;
+        type = ResultType.FAILURE;
+        break;
+      }
     }
 
     StringBuilder stdOut = new StringBuilder();
