@@ -96,7 +96,8 @@ public final class JUnitRunner extends BaseRunner {
           requestBuilder = requestBuilder.selectors(selectClass(testClass));
         } else {
           for (TestSelector selector : testSelectorList.getSelectors()) {
-            if (selector.matchesClassName(testClass.getSimpleName())) {
+            if (selector.matchesClassName(testClass.getSimpleName()) ||
+              selector.matchesClassName(testClass.getCanonicalName())) {
               if (selector.isMatchAnyMethod()) {
                 requestBuilder = requestBuilder.selectors(selectClass(testClass));
               } else {
