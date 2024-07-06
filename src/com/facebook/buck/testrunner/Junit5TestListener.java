@@ -135,6 +135,7 @@ public class Junit5TestListener implements TestExecutionListener {
       if(f.getTestIdentifier().equals(testIdentifier)) {
         failure = f;
         type = ResultType.FAILURE;
+        break;
       }
     }
 
