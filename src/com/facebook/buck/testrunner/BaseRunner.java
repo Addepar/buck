@@ -103,10 +103,10 @@ public abstract class BaseRunner {
 
       // suite attribute
       test.setAttribute(
-        "suite",
-        (result.testMethodName == null && result.testClassName.equals("null"))
-          ? testClassName
-          : result.testClassName);
+          "suite",
+          (result.testMethodName == null && result.testClassName.equals("null"))
+              ? testClassName
+              : result.testClassName);
 
       // name attribute
       test.setAttribute("name", result.testMethodName);
