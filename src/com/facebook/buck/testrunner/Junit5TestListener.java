@@ -152,7 +152,8 @@ public class Junit5TestListener implements TestExecutionListener {
     }
 
     String className = testClass.getCanonicalName();
-    String methodName = testIdentifier.getDisplayName().replace("()", "");
+    String methodName =
+      testIdentifier.isTest() ? testIdentifier.getLegacyReportingName().replace("()", "") : "";
     long runTime = System.currentTimeMillis() - this.testStartTime;
     results.add(
       new TestResult(
