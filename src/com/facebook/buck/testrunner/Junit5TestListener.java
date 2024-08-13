@@ -61,9 +61,6 @@ public class Junit5TestListener implements TestExecutionListener {
   // compare to Junit4TestListener.testStarted
   @Override
   public void executionStarted(TestIdentifier testIdentifier) {
-    if (!testIdentifier.isTest()) {
-      return;
-    }
     // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
     // form of System.out.println) the developer is using to debug the test.
     originalOut = System.out;
@@ -100,10 +97,6 @@ public class Junit5TestListener implements TestExecutionListener {
   // compare to Junit4TestListener.testFinished
   @Override
   public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
-    if (!testIdentifier.isTest()) {
-      return;
-    }
-
     // capture testIdentifier
     this.testIdentifier = testIdentifier;
 
@@ -159,7 +152,7 @@ public class Junit5TestListener implements TestExecutionListener {
     }
 
     String className = testClass.getCanonicalName();
-    String methodName = testIdentifier.getDisplayName().replace("()", "");
+    String methodName = testIdentifier.getLegacyReportingName().replace("()", "");
     long runTime = System.currentTimeMillis() - this.testStartTime;
     results.add(
       new TestResult(

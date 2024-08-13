@@ -1,0 +1,7 @@
+prebuilt_jar(
+    name = "junit5-jupiter-engine",
+    binary_jar = "junit-jupiter-engine-5.10.1.jar",
+    javadoc_url = "https://junit.org/junit5/docs/5.10.1/api/",
+    source_jar = "junit-jupiter-engine-5.10.1-sources.jar",
+    visibility = ["PUBLIC"],
+)
