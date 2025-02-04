@@ -170,6 +170,13 @@ public final class JUnitRunner extends BaseRunner {
         return true;
       }
     }
+
+    for (Class<?> c : klass.getDeclaredClasses()) {
+      if (c.getDeclaredAnnotation(org.junit.jupiter.api.Nested.class) != null) {
+        return mightBeJunit5TestClass(c);
+      }
+    }
+
     return false;
   }
 
