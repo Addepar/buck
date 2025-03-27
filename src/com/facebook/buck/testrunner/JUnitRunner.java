@@ -166,6 +166,7 @@ public final class JUnitRunner extends BaseRunner {
     for (Method m : klass.getMethods()) {
       if (m.getAnnotation(org.junit.jupiter.api.Test.class) != null ||
         m.getAnnotation(org.junit.jupiter.params.ParameterizedTest.class) != null ||
+        m.getAnnotation(org.junit.jupiter.api.TestFactory.class) != null ||
         m.getAnnotation(org.junit.jupiter.api.RepeatedTest.class) != null) {
         return true;
       }
